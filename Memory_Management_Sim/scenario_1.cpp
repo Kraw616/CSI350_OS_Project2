@@ -334,4 +334,18 @@ void scenario_1(vector<Process> process_queue, vector<Processor> processor_list)
             }
         }
     }
+
+    cout << "SCENARIO 1: " << endl;
+    cout << "--------------------" << endl;
+    cout << endl;
+    
+    // Output process info
+    for(int i=0; i<finished.size(); i++)
+    {
+        cout << "PROCESS ID: " << finished[i].id << endl; 
+        cout << "PROCESS ST: " << finished[i].service_time << endl; 
+        cout << "PROCESS MR: " << finished[i].memory_req << endl; 
+        
+        cout << endl;
+    }
 }

@@ -315,4 +315,19 @@ void scenario_2(vector<Process> process_queue, vector<Processor> processor_list,
     cout << "SIZE OF W QUEUE: " << wait_queue.size() << endl;
     cout << "SIZE OF F QUEUE: " << finished.size() << endl;*/
 
+    // Output process info
+
+    cout << "SCENARIO 2: " << endl;
+    cout << "--------------------" << endl;
+    cout << endl;
+
+    for(int i=0; i<finished.size(); i++)
+    {
+        cout << "PROCESS ID: " << finished[i].id << endl; 
+        cout << "PROCESS ST: " << finished[i].service_time << endl; 
+        cout << "PROCESS MR: " << finished[i].memory_req << endl; 
+        
+        cout << endl;
+    }
+
 }
