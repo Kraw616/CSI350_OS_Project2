@@ -44,16 +44,29 @@ using namespace std;
 // MAIN METHOD
 int main()
 {
-    // Create our simulated memory chunk for scenario 2
-    vector<Slot> memory = create_memory();
 
+     // Value to seed random generator
+    int seed_value;
+
+    // Prompt user for seed value to seed generator of memory requiremnents
+    cout << "Seed value?: " << endl;
+    cin >> seed_value;
+
+    // Create our simulated memory chunk for scenario 2
+    vector<Slot> memory_10mb = create_memory_12();
+    
+    
     // Seed and create processors
-    vector<Process> process_queue = seed_and_create_processes();
+    vector<Process> process_queue = seed_and_create_processes(seed_value);
     vector<Processor> processor_list = create_processors();
+
+    
+    vector<Process> process_queue_1 = process_queue;
+    vector<Slot> memory_1 = memory_10mb;
 
     // Record times before and after scenario 1 and take the difference, and convert seconds to nanoseconds
     chrono::high_resolution_clock::time_point t_start_1 = chrono::high_resolution_clock::now();
-    scenario_1(process_queue, processor_list);
+    scenario_1(process_queue_1, processor_list);
     chrono::high_resolution_clock::time_point t_end_1 = chrono::high_resolution_clock::now();
 
     chrono::duration<double> time_elapsed_1 = chrono::duration_cast<chrono::duration<double> >(t_end_1-t_start_1);
@@ -61,16 +74,119 @@ int main()
     cout << "It took " << (time_elapsed_1.count() * 1000000000) << " nanoseconds to complete scenario 1." << endl;
 
     cout << endl;
+    
+    vector<Process> process_queue_2_FF = create_copy_vector(process_queue);
+    vector<Slot> memory_2_FF = memory_10mb;
 
     // Record times before and after scenario 2 and take the difference, and convert seconds to nanoseconds
-    chrono::high_resolution_clock::time_point t_start_2 = chrono::high_resolution_clock::now();
-    scenario_2(process_queue, processor_list, memory);
-    chrono::high_resolution_clock::time_point t_end_2 = chrono::high_resolution_clock::now();
+    chrono::high_resolution_clock::time_point t_start_2_FF = chrono::high_resolution_clock::now();
+    // reseed to same number at beginning of scenario
+    scenario_2_FF(process_queue_2_FF, processor_list, memory_2_FF);
+    chrono::high_resolution_clock::time_point t_end_2_FF = chrono::high_resolution_clock::now();
 
-    chrono::duration<double> time_elapsed_2 = chrono::duration_cast<chrono::duration<double> >(t_end_2-t_start_2);
+    chrono::duration<double> time_elapsed_2_FF = chrono::duration_cast<chrono::duration<double> >(t_end_2_FF-t_start_2_FF);
 
-    cout << "It took " << (time_elapsed_2.count() * 1000000000) << " nanoseconds to complete scenario 2." << endl;
+    cout << "It took " << (time_elapsed_2_FF.count() * 1000000000) << " nanoseconds to complete scenario 2 FF." << endl;
+
+    cout << endl;
+
+    vector<Process> process_queue_2_BF = create_copy_vector(process_queue);
+    vector<Slot> memory_2_BF = memory_10mb;
+
+    // Record times before and after scenario 2 and take the difference, and convert seconds to nanoseconds
+    chrono::high_resolution_clock::time_point t_start_2_BF = chrono::high_resolution_clock::now();
+    // reseed to same number at beginning of scenario
+    scenario_2_FF(process_queue_2_BF, processor_list, memory_2_FF);
+    chrono::high_resolution_clock::time_point t_end_2_BF = chrono::high_resolution_clock::now();
+
+    chrono::duration<double> time_elapsed_2_BF = chrono::duration_cast<chrono::duration<double> >(t_end_2_BF-t_start_2_BF);
+
+    cout << "It took " << (time_elapsed_2_BF.count() * 1000000000) << " nanoseconds to complete scenario 2 BF." << endl;
     
+    
+    
+    
+    // Create our simulated memory chunk for scenario 3
+    vector<Slot> memory_5mb = create_memory_3();
+   
+    vector<Process> process_queue_3_FF = process_queue;
+    vector<Slot> memory_3_FF = memory_5mb;
+
+    // Record times before and after scenario 1 and take the difference, and convert seconds to nanoseconds
+    chrono::high_resolution_clock::time_point t_start_3_FF = chrono::high_resolution_clock::now();
+    scenario_3_FF(process_queue_3_FF, processor_list, memory_3_FF);
+    chrono::high_resolution_clock::time_point t_end_3_FF = chrono::high_resolution_clock::now();
+
+    chrono::duration<double> time_elapsed_3_FF = chrono::duration_cast<chrono::duration<double> >(t_end_3_FF-t_start_3_FF);
+
+    cout << "It took " << (time_elapsed_3_FF.count() * 1000000000) << " nanoseconds to complete scenario 3 FF." << endl;
+
+    cout << endl;
+    
+   
+    
+    vector<Process> process_queue_3_BF = process_queue;
+    vector<Slot> memory_3_BF = memory_5mb;
+
+    // Record times before and after scenario 1 and take the difference, and convert seconds to nanoseconds
+    chrono::high_resolution_clock::time_point t_start_3_BF = chrono::high_resolution_clock::now();
+    scenario_3_BF(process_queue_3_BF, processor_list, memory_3_BF);
+    chrono::high_resolution_clock::time_point t_end_3_BF = chrono::high_resolution_clock::now();
+
+    chrono::duration<double> time_elapsed_3_BF = chrono::duration_cast<chrono::duration<double> >(t_end_3_BF-t_start_3_BF);
+
+    cout << "It took " << (time_elapsed_3_BF.count() * 1000000000) << " nanoseconds to complete scenario 3 BF." << endl;
+
+    cout << endl;
+    
+
+    vector<Slot> memory_1mb = create_memory_4();
+
+    
+    vector<Process> process_queue_4_FF = process_queue;
+    vector<Slot> memory_4_FF = memory_1mb;
+
+    // Record times before and after scenario 1 and take the difference, and convert seconds to nanoseconds
+    chrono::high_resolution_clock::time_point t_start_4_FF = chrono::high_resolution_clock::now();
+    scenario_4_FF(process_queue_4_FF, processor_list, memory_4_FF);
+    chrono::high_resolution_clock::time_point t_end_4_FF = chrono::high_resolution_clock::now();
+
+    chrono::duration<double> time_elapsed_4_FF = chrono::duration_cast<chrono::duration<double> >(t_end_4_FF-t_start_4_FF);
+
+    cout << "It took " << (time_elapsed_4_FF.count() * 1000000000) << " nanoseconds to complete scenario 4 FF." << endl;
+
+    cout << endl;
+    
+
+   
+   
+    vector<Process> process_queue_4_BF = process_queue;
+    vector<Slot> memory_4_BF = memory_1mb;
+
+    // Record times before and after scenario 1 and take the difference, and convert seconds to nanoseconds
+    chrono::high_resolution_clock::time_point t_start_4_BF = chrono::high_resolution_clock::now();
+    scenario_4_BF(process_queue_4_BF, processor_list, memory_4_BF);
+    chrono::high_resolution_clock::time_point t_end_4_BF = chrono::high_resolution_clock::now();
+
+    chrono::duration<double> time_elapsed_4_BF = chrono::duration_cast<chrono::duration<double> >(t_end_4_BF-t_start_4_BF);
+
+    cout << "It took " << (time_elapsed_4_BF.count() * 1000000000) << " nanoseconds to complete scenario 4 BF." << endl;
+
+    cout << endl;
+
     // Signal to user that the main method is done.
     cout << "END OF MAIN" << endl;
+
+    /*// Testing
+    
+    //vector<Slot> memory = create_memory_4();
+    vector<Slot> memory(11);
+
+    for(int i=0; i<memory.size(); i++)
+    {
+        memory[i].has_process = false;
+        memory[i].current_process_id = -1;
+    }
+
+    test(memory);*/
 }

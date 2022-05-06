@@ -8,6 +8,7 @@
 
 #include "functions.h"
 
+
 // Scenario 1
 void scenario_1(vector<Process> process_queue, vector<Processor> processor_list)
 {
@@ -31,7 +32,7 @@ void scenario_1(vector<Process> process_queue, vector<Processor> processor_list)
     int *ptr;
 
 
-    for(int i=0; i<50; i++)
+    for(int i=0; i<process_queue.size(); i++)
     {
         pointers[i] = 0;
     }
@@ -40,8 +41,9 @@ void scenario_1(vector<Process> process_queue, vector<Processor> processor_list)
     for(int i=0; i<processor_list.size();i++)
     {
         // Load into memory
-        ptr = (int*)malloc(process_queue[i].memory_req * (1000 * sizeof(int))); // KB
+        ptr = (int*)malloc(process_queue[i].memory_req * 1000); // KB
         pointers[i] = ptr;
+
 
         // Load onto processor
         processor_list[i].current_process = process_queue[i];
@@ -93,19 +95,17 @@ void scenario_1(vector<Process> process_queue, vector<Processor> processor_list)
                     }
                     else
                     {
-                        Process random_process;
-                        int random;
-                        random = rand() % process_queue.size();
-                        random_process = process_queue[random];
+                        Process next_process;
+                        next_process = process_queue.front();
 
 
-                        ptr = (int*)malloc(random_process.memory_req * (1000 * sizeof(int))); // KB
-                        pointers[random] = ptr;
+                        ptr = (int*)malloc(next_process.memory_req * 1000); // KB
+                        pointers[next_process.id] = ptr;
 
-                        processor_list[i].current_process = random_process;
+                        processor_list[i].current_process = next_process;
                         processor_list[i].has_process = true;
 
-                        process_queue.erase(process_queue.begin() + random);
+                        process_queue.erase(process_queue.begin());
                     }
                 }
             }
@@ -115,18 +115,17 @@ void scenario_1(vector<Process> process_queue, vector<Processor> processor_list)
         if(cycle % 100 == 0)
         {
             
-            Process random_process;
-            int random;
+            Process next_process;
 
             if(!process_queue.empty())
             {
                 // Random process from process queue gets loaded into memory
-                random = rand() % process_queue.size();
-                random_process = process_queue[random];
+                next_process = process_queue.front();
 
 
-                ptr = (int*)malloc(random_process.memory_req * (1000 * sizeof(int))); // KB
-                pointers[random] = ptr;
+                ptr = (int*)malloc(next_process.memory_req * 1000); // KB
+                pointers[next_process.id] = ptr;
+                //process_queue.erase(process_queue.begin())
             }
             
             int free_processor_id;
@@ -139,11 +138,11 @@ void scenario_1(vector<Process> process_queue, vector<Processor> processor_list)
                 {
                     // Get the ID of a free processor, and load random process onto it
                     free_processor_id = free_processor(processor_list);
-                    processor_list[free_processor_id].current_process = random_process;
+                    processor_list[free_processor_id].current_process = next_process;
                     processor_list[free_processor_id].has_process = true;
 
                     //cout << processor_list[free_processor_id].id << endl;
-                    process_queue.erase(process_queue.begin() + random);  
+                    process_queue.erase(process_queue.begin());  
                 }
                 // If processes are in wait queue, load those
                 else
@@ -157,20 +156,20 @@ void scenario_1(vector<Process> process_queue, vector<Processor> processor_list)
             // Otherwise, push the new process into the wait cue
             else
             {
-                wait_queue.push_back(random_process);
+                wait_queue.push_back(next_process);
 
-                process_queue.erase(process_queue.begin() + random);
-                
+                process_queue.erase(process_queue.begin());
             }
 
-            // Output
-            //print_processors(processor_list, cycle);
+           /*//Output
+            print_processors(processor_list, cycle);
 
-            //int count = size_memory(pointers);
-            //cout << "MEM: " << count << endl;
+            int count = size_memory(pointers);
+            cout << "MEM: " << count << endl;
 
-            //cout << "SIZE OF P QUEUE: " << process_queue.size() << endl;
-            //cout << "SIZE OF W QUEUE: " << wait_queue.size() << endl;
+            cout << "SIZE OF P QUEUE: " << process_queue.size() << endl;
+            cout << "SIZE OF W QUEUE: " << wait_queue.size() << endl;
+            */
         } 
     }
 
@@ -216,31 +215,6 @@ void scenario_1(vector<Process> process_queue, vector<Processor> processor_list)
                 }
             }
         }
-
-        //int free_processor_id;
-
-        /*if(has_room(processor_list))
-        {  
-            free_processor_id = free_processor(processor_list);
-            cout << "PROCESSOR FREE: " << free_processor_id << ", WAIT PROCESS TO PUT: " << wait_queue.front().id << endl;
-            processor_list[free_processor_id].current_process = wait_queue.front();
-            processor_list[free_processor_id].has_process = true;
-            wait_queue.erase(wait_queue.begin());
-        }*/
-        
-        /*else
-        {    
-            cout << "WAIT" << endl;
-            break;
-        }*/
-        //free(ptr);
-
-        //process_queue.clear();
-
-        /*for(int i=0; i<processor_list.size();i++)
-        {
-            cout << "PROCESSOR ID: " << processor_list[i].id << ", PID: " << processor_list[i].current_process.id << endl;
-        }*/
     }
 
     // While there are still processes on processors (after wait queue empty)
@@ -289,39 +263,9 @@ void scenario_1(vector<Process> process_queue, vector<Processor> processor_list)
         cout << "MEM: " << count << endl;
 
         cout << "SIZE OF P QUEUE: " << process_queue.size() << endl;
-        cout << "SIZE OF W QUEUE: " << wait_queue.size() << endl;*/
-
-        //int free_processor_id;
-
-        /*if(has_room(processor_list))
-        {  
-            free_processor_id = free_processor(processor_list);
-            cout << "PROCESSOR FREE: " << free_processor_id << ", WAIT PROCESS TO PUT: " << wait_queue.front().id << endl;
-            processor_list[free_processor_id].current_process = wait_queue.front();
-            processor_list[free_processor_id].has_process = true;
-            wait_queue.erase(wait_queue.begin());
-        }*/
-        
-        /*else
-        {    
-            cout << "WAIT" << endl;
-            break;
-        }*/
-        /*for(int i=0; i<processor_list.size();i++)
-        {
-            cout << "PROCESSOR ID: " << processor_list[i].id << ", PID: " << processor_list[i].current_process.id << endl;
-        }*/  
+        cout << "SIZE OF W QUEUE: " << wait_queue.size() << endl;
+        */
     }
-
-    /* FINAL OUTPUT
-    print_processors(processor_list, cycle);
-
-    int count = size_memory(pointers);
-    cout << "MEM: " << count << endl;
-
-    cout << "SIZE OF P QUEUE: " << process_queue.size() << endl;
-    cout << "SIZE OF W QUEUE: " << wait_queue.size() << endl;
-    cout << "SIZE OF F QUEUE: " << finished.size() << endl;*/
 
     // Cleanup leftover memory    
     if(size_memory(pointers) > 0)
@@ -330,7 +274,7 @@ void scenario_1(vector<Process> process_queue, vector<Processor> processor_list)
         {
             if(pointers[i] != 0)
             {
-                pointers[i] = 0;
+                free(pointers[i]);
             }
         }
     }

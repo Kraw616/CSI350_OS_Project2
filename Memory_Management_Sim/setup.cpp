@@ -7,24 +7,17 @@
 
 using namespace std;
 
-vector<Process> seed_and_create_processes()
+vector<Process> seed_and_create_processes(int seed)
 {
     // Available memory to allocate
     int to_allocate = 9950;
 
-    // Value to seed random generator
-    int seed_value;
-
     // Vector of processes to hold processes that we will return
     vector<Process> process_queue;
 
-    // Prompt user for seed value to seed generator of memory requiremnents
-    cout << "Seed value?: " << endl;
-    cin >> seed_value;
-
     // Create and seed generator object
     default_random_engine gen;
-    gen.seed(seed_value);
+    gen.seed(seed);
 
     // Normal distribution of mean 200 and standard deviation 75
     normal_distribution<float> distribution(200, 75);
@@ -45,18 +38,24 @@ vector<Process> seed_and_create_processes()
     {
         int random_req = int(distribution(gen));
 
-        if((to_allocate - random_req) <= 0)
+        if(i==49)
         {
             process_queue[i].memory_req += to_allocate;
             break;          
         }
-        else
+        else if(to_allocate - random_req >= 0)
         {
-            process_queue[i].memory_req += random_req;
+            process_queue[i].memory_req += random_req;  // Give 50 whatever is left (regardless of how much it is)
             to_allocate -= random_req;
         }
     }
 
+    // Check memory req total
+    int total = 0;
+    for(int i=0; i<process_queue.size(); i++)
+    {
+        total += process_queue[i].memory_req;
+    }
     return process_queue;   // Return vector of processes
 }
 
@@ -89,7 +88,7 @@ vector<Processor> create_processors()
     
 }
 
-vector<Slot> create_memory()
+vector<Slot> create_memory_12()
 {  
     vector<Slot> memory(10000);
 
@@ -100,71 +99,40 @@ vector<Slot> create_memory()
     return memory;
 }
 
+vector<Slot> create_memory_3()
+{  
+    vector<Slot> memory(5000);
+
+    for(int i=0; i<memory.size(); i++)
+    {
+        memory[i].has_process = false;
+    }
+    return memory;
+}
+
+vector<Slot> create_memory_4()
+{  
+    vector<Slot> memory(1000);
+
+    for(int i=0; i<memory.size(); i++)
+    {
+        memory[i].has_process = false;
+    }
+    return memory;
+}
+
 void test(vector<Slot> memory)
 {
-
     Process test_process;
-    test_process.memory_req = 1;
+    test_process.memory_req = 10;
     test_process.id = 1;
 
-    int just_allocated;
-
-    int counter = 0;
-
-    for(int i=0; i<test_process.memory_req; i++)
-    {
-        Slot new_slot;
-        new_slot.current_process_id = test_process.id;
-        new_slot.has_process = true;
-
-        memory[i] = new_slot;
-
-        if(i == test_process.memory_req-1) // Last element
-        {
-            just_allocated = i;
-        }
-    }
+    my_alloc_BF(memory, test_process);
 
     for(int i=0; i<memory.size(); i++)
-    {
-        if(memory[i].has_process)
-
-        {
-            counter += 1;
-        }
-    }
-
-    cout << "SIZE: " << counter << endl;
-
-    Process test_process2;
-    test_process2.memory_req = 2;
-    test_process2.id = 2;
-
-    int counter2 = 0;
-
-    for(int i=just_allocated; i<just_allocated+test_process2.memory_req; i++)
-    {
-        Slot new_slot;
-        new_slot.current_process_id = test_process2.id;
-        new_slot.has_process = true;
-
-        memory[i] = new_slot;
-
-        if(i == test_process.memory_req) // Last element
-        {
-            just_allocated = i;
-        }
-    }
-
-    for(int i=0; i<memory.size(); i++)
-    {
+    {        
         cout << memory[i].current_process_id << endl;
-        if(memory[i].has_process)
-        {
-            counter2 += 1;
-        }
     }
 
-    cout << "SIZE2: " << counter2 << endl;
-
+    cout << endl;
 }

@@ -1,6 +1,6 @@
 /* Author: Jacob Krawitz (jkrawitz@muhlenberg.edu) 
    Date: 4/29/22
-   Description: Defines function for scenario 2 (I handle allocation).
+   Description: Defines function for scenario 4 (I handle allocation).
 
    ** NOTE **
    Outputs are possible to see, but are commented out.
@@ -9,11 +9,13 @@
 #include "functions.h"
 
 
-// Scenario 2, FF
-void scenario_2_FF(vector<Process> process_queue, vector<Processor> processor_list, vector<Slot> memory)
+// Scenario 4, FF
+void scenario_4_FF(vector<Process> process_queue, vector<Processor> processor_list, vector<Slot> memory)
 {
     // Keep track of cycles taken in the system
     int cycle = 0;
+
+    int fails = 0;
 
     // Holder process for once all processes except ones on processors done
     Process holder_process;
@@ -31,16 +33,34 @@ void scenario_2_FF(vector<Process> process_queue, vector<Processor> processor_li
 
     //int *ptr;
 
+    bool loaded;
+
     // Preload processes
     for(int i=0; i<processor_list.size();i++)
     {
-        // Load into memory
-        my_alloc_FF(memory, process_queue[i]);
+        loaded = false;
 
-        // Load onto processor
-        processor_list[i].current_process = process_queue[i];
-        processor_list[i].has_process = true;
-        process_queue.erase(process_queue.begin() + i);
+        Process to_load = process_queue[i];
+        while(!loaded)
+        {
+            if(process_queue[i].memory_req > memory.size())
+            {
+                fails += 1;
+                to_load = process_queue[i+1];
+                process_queue.erase(process_queue.begin() + i);
+                continue;
+            }
+            
+            // Load into memory
+            my_alloc_BF(memory, process_queue[i]);
+
+            // Load onto processor
+            processor_list[i].current_process = process_queue[i];
+            processor_list[i].has_process = true;
+            process_queue.erase(process_queue.begin() + i);
+
+            loaded = true;
+        }
     }
 
     // Loop while process queue is not empty (adding to wait queue)
@@ -69,14 +89,11 @@ void scenario_2_FF(vector<Process> process_queue, vector<Processor> processor_li
                 {  
                     // Add it to the finished queue 
                     finished.push_back(processor_list[i].current_process);
-            
-                    // If the pointer is loaded into memory...
-                    
+                                
                     // Deallocate the memory 
                     my_free(memory, processor_list[i].current_process);
                 
                     // Replace process with waiting process if there, or new one from process
-                    
                     if(!wait_queue.empty())
                     {
                         processor_list[i].current_process = wait_queue.front();
@@ -84,19 +101,39 @@ void scenario_2_FF(vector<Process> process_queue, vector<Processor> processor_li
                         wait_queue.erase(wait_queue.begin());
                     }
                     else
-                    {
-                        Process next_process;
-                        next_process = process_queue.front();
+                    {  
+                        // If processes in memory wait queue...
+                        if(!mem_wait_queue.empty())
+                        {
+                            Process next_process = mem_wait_queue.front();
 
+                            // If they fit, load those
+                            if(my_alloc_FF(memory, next_process))
+                            {
+                                processor_list[i].current_process = next_process;
+                                processor_list[i].has_process = true;
 
-                        if(my_alloc_FF(memory, next_process))
-                        {                        
-                            processor_list[i].current_process = next_process;
-                            processor_list[i].has_process = true;
-
-                            process_queue.erase(process_queue.begin());
-
+                                mem_wait_queue.erase(mem_wait_queue.begin());
+                            }
                         }
+                        // Otherwise, load another process
+                        else
+                        {
+                            Process next_process;
+                            next_process = process_queue.front();
+
+                            if((my_alloc_FF(memory, next_process)))
+                            {                            
+                                processor_list[i].current_process = next_process;
+                                processor_list[i].has_process = true;
+
+                                process_queue.erase(process_queue.begin());
+                            }
+                            else
+                            {
+                                mem_wait_queue.push_back(next_process);
+                            }
+                        }  
                     }
                 }
             }
@@ -105,21 +142,33 @@ void scenario_2_FF(vector<Process> process_queue, vector<Processor> processor_li
         // Every 100 cycles...
         if(cycle % 100 == 0)
         {
-            
-            Process next_process;
-
             if(!process_queue.empty())
             {
                 // Next process from process queue gets loaded into memory
-                next_process = process_queue.front();
+                Process next_process = process_queue.front();
 
-                if((size_memory_mine(memory) < 10000))
+                // If it has a too high memory requirement, increment fails and erase it from queue
+                if(next_process.memory_req > memory.size())
                 {
-                    my_alloc_FF(memory, next_process);
+                    fails += 1;
+                    process_queue.erase(process_queue.begin() + next_process.id);
+                    break;
+                }
+                // Otherwise, see if we can allocate it
+                else if(my_alloc_FF(memory, next_process))
+                {
+                    ;
+                }
+                // If not, add to wait queue for mem 
+                else
+                {
+                    mem_wait_queue.push_back(next_process);
                 }
             }
             
             int free_processor_id;
+
+            Process next_process = process_queue.front();
 
             // If there is room on the processor...
             if(has_room(processor_list))
@@ -136,7 +185,7 @@ void scenario_2_FF(vector<Process> process_queue, vector<Processor> processor_li
                     process_queue.erase(process_queue.begin());  
                 }
                 // If processes are in wait queue, load those
-                else
+                else if(!wait_queue.empty())
                 {
                     free_processor_id = free_processor(processor_list);
                     processor_list[free_processor_id].current_process = wait_queue.front();
@@ -150,25 +199,25 @@ void scenario_2_FF(vector<Process> process_queue, vector<Processor> processor_li
                 wait_queue.push_back(next_process);
 
                 process_queue.erase(process_queue.begin());
-                
             }
 
-            /* Output
+            /*//Output
             print_processors(processor_list, cycle);
 
-            int count = memory.size();
+            int count = size_memory_mine(memory);
             cout << "MEM: " << count << endl;
 
             cout << "SIZE OF P QUEUE: " << process_queue.size() << endl;
-            cout << "SIZE OF W QUEUE: " << wait_queue.size() << endl;*/
+            cout << "SIZE OF W QUEUE: " << wait_queue.size() << endl;
+            cout << "SIZE OF MEM W QUEUE:" << mem_wait_queue.size() << endl;
+            */
+            
         } 
     }
 
-    // While te wait queue is not empty (after process queue is empty)
+    // While the wait queue is not empty (after process queue is empty)
     while(!wait_queue.empty())
     {
-        int *ptr;
-
         cycle += 50; // Cycles go by 50 cycles, at 100 cycles a new process comes in and at 150 is the speed
                     // cycle_num % 100 = 0 then we are at a new 100th cycle, new process comes in
                     // cycle_num % 150 = 0 then it is 1 second for the processor
@@ -191,7 +240,6 @@ void scenario_2_FF(vector<Process> process_queue, vector<Processor> processor_li
                 if(processor_list[i].current_process.cycles_worked <= 0)
                 {
                     finished.push_back(processor_list[i].current_process);
-
                     
                     // Deallocate the memory 
                     my_free(memory, processor_list[i].current_process);
@@ -201,9 +249,34 @@ void scenario_2_FF(vector<Process> process_queue, vector<Processor> processor_li
                     processor_list[i].has_process = true;
 
                     wait_queue.erase(wait_queue.begin());
+
+                    // If there are processes waiting due to memory...
+                    if(!mem_wait_queue.empty())
+                    {
+                        Process next_process = mem_wait_queue.front();
+
+                        // If they fit, add them to the wait queue
+                        if(my_alloc_FF(memory, next_process))
+                        {
+                            wait_queue.push_back(next_process);
+
+                            mem_wait_queue.erase(mem_wait_queue.begin());
+                        }
+                    }
                 }
             }
         }
+
+        /*//Output
+        print_processors(processor_list, cycle);
+
+        int count = size_memory_mine(memory);
+        cout << "MEM: " << count << endl;
+
+        cout << "SIZE OF P QUEUE: " << process_queue.size() << endl;
+        cout << "SIZE OF W QUEUE: " << wait_queue.size() << endl;
+        cout << "SIZE OF MEM W QUEUE:" << mem_wait_queue.size() << endl;
+        */
     }
 
     // While there are still processes on processors (after wait queue empty)
@@ -235,17 +308,46 @@ void scenario_2_FF(vector<Process> process_queue, vector<Processor> processor_li
                 
                     // Deallocate the memory
                     my_free(memory, processor_list[i].current_process); 
-                
-                    // Holder process 
-                    processor_list[i].current_process = holder_process;
-                    processor_list[i].has_process = false;
+
+                    // If there are processes waiting due to memory...
+                    if(!mem_wait_queue.empty())
+                    {
+                        Process next_process = mem_wait_queue.front();
+
+                        // If they fit, add them to the wait queue
+                        if(my_alloc_FF(memory, next_process))
+                        {
+                            processor_list[i].current_process = next_process;
+                            processor_list[i].has_process = true;
+
+                            mem_wait_queue.erase(mem_wait_queue.begin());
+                        }
+                    }
+                    else
+                    {
+                        // Holder process 
+                        processor_list[i].current_process = holder_process;
+                        processor_list[i].has_process = false;
+                    }
                 }
             }
         }
-    }
-    // Output process info
 
-    cout << "SCENARIO 2 FF: " << endl;
+        /*//Output
+        print_processors(processor_list, cycle);
+
+        int count = size_memory_mine(memory);
+        cout << "MEM: " << count << endl;
+
+        cout << "SIZE OF P QUEUE: " << process_queue.size() << endl;
+        cout << "SIZE OF W QUEUE: " << wait_queue.size() << endl;
+        cout << "SIZE OF MEM W QUEUE:" << mem_wait_queue.size() << endl;
+        */
+        
+    }
+
+    // Output process info
+    cout << "SCENARIO 4 FF: " << endl;
     cout << "--------------------" << endl;
     cout << endl;
 
@@ -257,13 +359,16 @@ void scenario_2_FF(vector<Process> process_queue, vector<Processor> processor_li
         
         cout << endl;
     }
+    cout << "FAILED TO ALLOCATE: " << fails << endl;
 }
 
-// Scenario 2, BF
-void scenario_2_BF(vector<Process> process_queue, vector<Processor> processor_list, vector<Slot> memory)
+// Scenario 4, BF
+void scenario_4_BF(vector<Process> process_queue, vector<Processor> processor_list, vector<Slot> memory)
 {
     // Keep track of cycles taken in the system
     int cycle = 0;
+
+    int fails = 0;
 
     // Holder process for once all processes except ones on processors done
     Process holder_process;
@@ -275,17 +380,36 @@ void scenario_2_BF(vector<Process> process_queue, vector<Processor> processor_li
     vector<Process> wait_queue;
     vector<Process> mem_wait_queue;
 
+    bool loaded;
+
     // Preload processes
     for(int i=0; i<processor_list.size();i++)
     {
-        // Load into memory
-        my_alloc_BF(memory, process_queue[i]);
+        loaded = false;
 
-        // Load onto processor
-        processor_list[i].current_process = process_queue[i];
-        processor_list[i].has_process = true;
-        process_queue.erase(process_queue.begin() + i);
+        Process to_load = process_queue[i];
+        while(!loaded)
+        {
+            if(process_queue[i].memory_req > memory.size())
+            {
+                fails += 1;
+                to_load = process_queue[i+1];
+                process_queue.erase(process_queue.begin() + i);
+                continue;
+            }
+
+            if(my_alloc_BF(memory, process_queue[i]))
+            {
+                // Load onto processor
+                processor_list[i].current_process = process_queue[i];
+                processor_list[i].has_process = true;
+                process_queue.erase(process_queue.begin() + i);
+                loaded = true;
+            }
+            to_load = process_queue[i+1];
+        }
     }
+    
 
     // Loop while process queue is not empty (adding to wait queue)
     while(!process_queue.empty())
@@ -313,14 +437,11 @@ void scenario_2_BF(vector<Process> process_queue, vector<Processor> processor_li
                 {  
                     // Add it to the finished queue 
                     finished.push_back(processor_list[i].current_process);
-            
-                    // If the pointer is loaded into memory...
-                    
+                                
                     // Deallocate the memory 
                     my_free(memory, processor_list[i].current_process);
                 
                     // Replace process with waiting process if there, or new one from process
-                    
                     if(!wait_queue.empty())
                     {
                         processor_list[i].current_process = wait_queue.front();
@@ -328,19 +449,39 @@ void scenario_2_BF(vector<Process> process_queue, vector<Processor> processor_li
                         wait_queue.erase(wait_queue.begin());
                     }
                     else
-                    {
-                        Process next_process;
-                        next_process = process_queue.front();
+                    {  
+                        // If processes in memory wait queue...
+                        if(!mem_wait_queue.empty())
+                        {
+                            Process next_process = mem_wait_queue.front();
 
+                            // If they fit, load those
+                            if(my_alloc_BF(memory, next_process))
+                            {
+                                processor_list[i].current_process = next_process;
+                                processor_list[i].has_process = true;
 
-                        if(my_alloc_BF(memory, next_process))
-                        {                        
-                            processor_list[i].current_process = next_process;
-                            processor_list[i].has_process = true;
-
-                            process_queue.erase(process_queue.begin());
-
+                                mem_wait_queue.erase(mem_wait_queue.begin());
+                            }
                         }
+                        // Otherwise, load another process
+                        else
+                        {
+                            Process next_process;
+                            next_process = process_queue.front();
+
+                            if((my_alloc_BF(memory, next_process)))
+                            {                            
+                                processor_list[i].current_process = next_process;
+                                processor_list[i].has_process = true;
+
+                                process_queue.erase(process_queue.begin());
+                            }
+                            else
+                            {
+                                mem_wait_queue.push_back(next_process);
+                            }
+                        }  
                     }
                 }
             }
@@ -349,21 +490,33 @@ void scenario_2_BF(vector<Process> process_queue, vector<Processor> processor_li
         // Every 100 cycles...
         if(cycle % 100 == 0)
         {
-            
-            Process next_process;
-
             if(!process_queue.empty())
             {
                 // Next process from process queue gets loaded into memory
-                next_process = process_queue.front();
+                Process next_process = process_queue.front();
 
-                if(!(size_memory_mine(memory) >= 10000))
+                // If it has a too high memory requirement, increment fails and erase it from queue
+                if(next_process.memory_req > memory.size())
                 {
-                    my_alloc_BF(memory, next_process);
+                    fails += 1;
+                    process_queue.erase(process_queue.begin() + next_process.id);
+                    break;
+                }
+                // Otherwise, see if we can allocate it
+                else if(my_alloc_BF(memory, next_process))
+                {
+                    ;
+                }
+                // If not, add to wait queue for mem 
+                else
+                {
+                    mem_wait_queue.push_back(next_process);
                 }
             }
             
             int free_processor_id;
+
+            Process next_process = process_queue.front();
 
             // If there is room on the processor...
             if(has_room(processor_list))
@@ -380,7 +533,7 @@ void scenario_2_BF(vector<Process> process_queue, vector<Processor> processor_li
                     process_queue.erase(process_queue.begin());  
                 }
                 // If processes are in wait queue, load those
-                else
+                else if(!wait_queue.empty())
                 {
                     free_processor_id = free_processor(processor_list);
                     processor_list[free_processor_id].current_process = wait_queue.front();
@@ -394,21 +547,24 @@ void scenario_2_BF(vector<Process> process_queue, vector<Processor> processor_li
                 wait_queue.push_back(next_process);
 
                 process_queue.erase(process_queue.begin());
-                
             }
 
-            /* Output
+            /*//Output
             print_processors(processor_list, cycle);
 
-            int count = memory.size();
+            int count = size_memory_mine(memory);
             cout << "MEM: " << count << endl;
 
             cout << "SIZE OF P QUEUE: " << process_queue.size() << endl;
-            cout << "SIZE OF W QUEUE: " << wait_queue.size() << endl;*/
+            cout << "SIZE OF W QUEUE: " << wait_queue.size() << endl;
+            cout << "SIZE OF MEM W QUEUE:" << mem_wait_queue.size() << endl;
+            cout << "FAILS: " << fails << endl;
+            */
+            
         } 
     }
 
-    // While te wait queue is not empty (after process queue is empty)
+    // While the wait queue is not empty (after process queue is empty)
     while(!wait_queue.empty())
     {
         cycle += 50; // Cycles go by 50 cycles, at 100 cycles a new process comes in and at 150 is the speed
@@ -433,7 +589,6 @@ void scenario_2_BF(vector<Process> process_queue, vector<Processor> processor_li
                 if(processor_list[i].current_process.cycles_worked <= 0)
                 {
                     finished.push_back(processor_list[i].current_process);
-
                     
                     // Deallocate the memory 
                     my_free(memory, processor_list[i].current_process);
@@ -443,9 +598,34 @@ void scenario_2_BF(vector<Process> process_queue, vector<Processor> processor_li
                     processor_list[i].has_process = true;
 
                     wait_queue.erase(wait_queue.begin());
+
+                    // If there are processes waiting due to memory...
+                    if(!mem_wait_queue.empty())
+                    {
+                        Process next_process = mem_wait_queue.front();
+
+                        // If they fit, add them to the wait queue
+                        if(my_alloc_BF(memory, next_process))
+                        {
+                            wait_queue.push_back(next_process);
+
+                            mem_wait_queue.erase(mem_wait_queue.begin());
+                        }
+                    }
                 }
             }
         }
+
+        /*//Output
+        print_processors(processor_list, cycle);
+
+        int count = size_memory_mine(memory);
+        cout << "MEM: " << count << endl;
+
+        cout << "SIZE OF P QUEUE: " << process_queue.size() << endl;
+        cout << "SIZE OF W QUEUE: " << wait_queue.size() << endl;
+        cout << "SIZE OF MEM W QUEUE:" << mem_wait_queue.size() << endl;
+        */
     }
 
     // While there are still processes on processors (after wait queue empty)
@@ -477,17 +657,46 @@ void scenario_2_BF(vector<Process> process_queue, vector<Processor> processor_li
                 
                     // Deallocate the memory
                     my_free(memory, processor_list[i].current_process); 
-                
-                    // Holder process 
-                    processor_list[i].current_process = holder_process;
-                    processor_list[i].has_process = false;
+
+                    // If there are processes waiting due to memory...
+                    if(!mem_wait_queue.empty())
+                    {
+                        Process next_process = mem_wait_queue.front();
+
+                        // If they fit, add them to the wait queue
+                        if(my_alloc_BF(memory, next_process))
+                        {
+                            processor_list[i].current_process = next_process;
+                            processor_list[i].has_process = true;
+
+                            mem_wait_queue.erase(mem_wait_queue.begin());
+                        }
+                    }
+                    else
+                    {
+                        // Holder process 
+                        processor_list[i].current_process = holder_process;
+                        processor_list[i].has_process = false;
+                    }
                 }
             }
         }
+
+        /*//Output
+        print_processors(processor_list, cycle);
+
+        int count = size_memory_mine(memory);
+        cout << "MEM: " << count << endl;
+
+        cout << "SIZE OF P QUEUE: " << process_queue.size() << endl;
+        cout << "SIZE OF W QUEUE: " << wait_queue.size() << endl;
+        cout << "SIZE OF MEM W QUEUE:" << mem_wait_queue.size() << endl;
+        */
+        
     }
     // Output process info
 
-    cout << "SCENARIO 2 BF: " << endl;
+    cout << "SCENARIO 4 BF: " << endl;
     cout << "--------------------" << endl;
     cout << endl;
 
@@ -499,4 +708,5 @@ void scenario_2_BF(vector<Process> process_queue, vector<Processor> processor_li
         
         cout << endl;
     }
+    cout << "FAILED TO ALLOCATE: " << fails << endl;
 }
