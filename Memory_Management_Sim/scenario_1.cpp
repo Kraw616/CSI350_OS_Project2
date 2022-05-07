@@ -1,13 +1,13 @@
 /* Author: Jacob Krawitz (jkrawitz@muhlenberg.edu) 
-   Date: 4/29/22
+   Date: 5/06/22
    Description: Defines function for scenario 1 simulation (OS handles it).
 
    ** NOTE **
    Outputs are possible to see, but are commented out.
+   Header comments in functions.h
 */
 
 #include "functions.h"
-
 
 // Scenario 1
 void scenario_1(vector<Process> process_queue, vector<Processor> processor_list)
@@ -27,10 +27,8 @@ void scenario_1(vector<Process> process_queue, vector<Processor> processor_list)
 
     // Create array to hold pointers to processes 
     vector<int*> pointers(50);
-    //int* pointers = new int[50];
 
     int *ptr;
-
 
     for(int i=0; i<process_queue.size(); i++)
     {
@@ -122,10 +120,9 @@ void scenario_1(vector<Process> process_queue, vector<Processor> processor_list)
                 // Random process from process queue gets loaded into memory
                 next_process = process_queue.front();
 
-
+                // Load into memory
                 ptr = (int*)malloc(next_process.memory_req * 1000); // KB
                 pointers[next_process.id] = ptr;
-                //process_queue.erase(process_queue.begin())
             }
             
             int free_processor_id;
@@ -136,12 +133,11 @@ void scenario_1(vector<Process> process_queue, vector<Processor> processor_list)
                 // If no processes are waiting...
                 if(wait_queue.empty() && !process_queue.empty())
                 {
-                    // Get the ID of a free processor, and load random process onto it
+                    // Get the ID of a free processor, and load the next process onto it
                     free_processor_id = free_processor(processor_list);
                     processor_list[free_processor_id].current_process = next_process;
                     processor_list[free_processor_id].has_process = true;
 
-                    //cout << processor_list[free_processor_id].id << endl;
                     process_queue.erase(process_queue.begin());  
                 }
                 // If processes are in wait queue, load those
@@ -153,7 +149,7 @@ void scenario_1(vector<Process> process_queue, vector<Processor> processor_list)
                     wait_queue.erase(wait_queue.begin());
                 }
             }
-            // Otherwise, push the new process into the wait cue
+            // Otherwise, push the new process into the wait cue and remove it from the process queue
             else
             {
                 wait_queue.push_back(next_process);
@@ -292,4 +288,5 @@ void scenario_1(vector<Process> process_queue, vector<Processor> processor_list)
         
         cout << endl;
     }
+    cout << "TOTAL CYCLES: " << cycle << endl;
 }

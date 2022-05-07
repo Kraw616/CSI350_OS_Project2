@@ -1,5 +1,5 @@
 /* Author: Jacob Krawitz (jkrawitz@muhlenberg.edu) 
-   Date: 4/29/22
+   Date: 5/06/22
    Description: Defines function for scenario 4 (I handle allocation).
 
    ** NOTE **
@@ -27,12 +27,6 @@ void scenario_4_FF(vector<Process> process_queue, vector<Processor> processor_li
     vector<Process> wait_queue;
     vector<Process> mem_wait_queue;
 
-    // Create array to hold pointers to processes 
-    //vector<int*> pointers(50);
-    //int* pointers = new int[50];
-
-    //int *ptr;
-
     bool loaded;
 
     // Preload processes
@@ -43,7 +37,7 @@ void scenario_4_FF(vector<Process> process_queue, vector<Processor> processor_li
         Process to_load = process_queue[i];
         while(!loaded)
         {
-            if(process_queue[i].memory_req > memory.size())
+            if(process_queue[i].memory_req > memory.size()) // If that process does not fit (>1000), skip it and make a note of it
             {
                 fails += 1;
                 to_load = process_queue[i+1];
@@ -360,6 +354,7 @@ void scenario_4_FF(vector<Process> process_queue, vector<Processor> processor_li
         cout << endl;
     }
     cout << "FAILED TO ALLOCATE: " << fails << endl;
+    cout << "TOTAL CYCLES: " << cycle << endl;
 }
 
 // Scenario 4, BF
@@ -709,4 +704,5 @@ void scenario_4_BF(vector<Process> process_queue, vector<Processor> processor_li
         cout << endl;
     }
     cout << "FAILED TO ALLOCATE: " << fails << endl;
+    cout << "TOTAL CYCLES: " << cycle << endl;
 }

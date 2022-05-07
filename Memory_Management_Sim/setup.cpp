@@ -1,8 +1,17 @@
 /* Author: Jacob Krawitz (jkrawitz@muhlenberg.edu) 
-   Date: 4/29/22
-   Description: Defines function to setup simulation.
+   Date: 5/06/22
+   Description: Defines function to setup simulation, such as:
+
+    seeding and creating processes
+
+    creating processors
+
+    creating memory representations for each scenario
+
+    * NOTE * See functions.h for header comments
 */
 
+// INCLUDE STATEMENT
 #include "functions.h"
 
 using namespace std;
@@ -56,6 +65,7 @@ vector<Process> seed_and_create_processes(int seed)
     {
         total += process_queue[i].memory_req;
     }
+    //cout << "TOTAL: " << total << endl;
     return process_queue;   // Return vector of processes
 }
 
@@ -88,11 +98,11 @@ vector<Processor> create_processors()
     
 }
 
-vector<Slot> create_memory_12()
+vector<Slot> create_memory_2()
 {  
-    vector<Slot> memory(10000);
+    vector<Slot> memory(10000); // Create a vector of slots with size 10000
 
-    for(int i=0; i<memory.size(); i++)
+    for(int i=0; i<memory.size(); i++)  // Initialize all slots as having no process
     {
         memory[i].has_process = false;
     }
@@ -101,9 +111,9 @@ vector<Slot> create_memory_12()
 
 vector<Slot> create_memory_3()
 {  
-    vector<Slot> memory(5000);
+    vector<Slot> memory(5000);  // Create a vector of slots with size 5000
 
-    for(int i=0; i<memory.size(); i++)
+    for(int i=0; i<memory.size(); i++)  // Initialize all slots as having no process
     {
         memory[i].has_process = false;
     }
@@ -112,27 +122,11 @@ vector<Slot> create_memory_3()
 
 vector<Slot> create_memory_4()
 {  
-    vector<Slot> memory(1000);
+    vector<Slot> memory(1000);  // Create a vector of slots with size 1000
 
     for(int i=0; i<memory.size(); i++)
     {
-        memory[i].has_process = false;
+        memory[i].has_process = false;  // Initialize all slots as having no process
     }
     return memory;
-}
-
-void test(vector<Slot> memory)
-{
-    Process test_process;
-    test_process.memory_req = 10;
-    test_process.id = 1;
-
-    my_alloc_BF(memory, test_process);
-
-    for(int i=0; i<memory.size(); i++)
-    {        
-        cout << memory[i].current_process_id << endl;
-    }
-
-    cout << endl;
 }

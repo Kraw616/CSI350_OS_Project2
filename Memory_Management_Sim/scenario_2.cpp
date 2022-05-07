@@ -1,13 +1,14 @@
 /* Author: Jacob Krawitz (jkrawitz@muhlenberg.edu) 
-   Date: 4/29/22
-   Description: Defines function for scenario 2 (I handle allocation).
+   Date: 5/06/22
+   Description: Defines function for scenario 2 (I handle allocation, with a 10mb memory allocation.).
 
    ** NOTE **
    Outputs are possible to see, but are commented out.
+   Header comments in functions.h
 */
 
+// INCLUDE STATEMENT
 #include "functions.h"
-
 
 // Scenario 2, FF
 void scenario_2_FF(vector<Process> process_queue, vector<Processor> processor_list, vector<Slot> memory)
@@ -24,12 +25,6 @@ void scenario_2_FF(vector<Process> process_queue, vector<Processor> processor_li
     vector<Process> finished;
     vector<Process> wait_queue;
     vector<Process> mem_wait_queue;
-
-    // Create array to hold pointers to processes 
-    //vector<int*> pointers(50);
-    //int* pointers = new int[50];
-
-    //int *ptr;
 
     // Preload processes
     for(int i=0; i<processor_list.size();i++)
@@ -69,9 +64,7 @@ void scenario_2_FF(vector<Process> process_queue, vector<Processor> processor_li
                 {  
                     // Add it to the finished queue 
                     finished.push_back(processor_list[i].current_process);
-            
-                    // If the pointer is loaded into memory...
-                    
+                                
                     // Deallocate the memory 
                     my_free(memory, processor_list[i].current_process);
                 
@@ -257,6 +250,7 @@ void scenario_2_FF(vector<Process> process_queue, vector<Processor> processor_li
         
         cout << endl;
     }
+    cout << "TOTAL CYCLES: " << cycle << endl;
 }
 
 // Scenario 2, BF
@@ -499,4 +493,5 @@ void scenario_2_BF(vector<Process> process_queue, vector<Processor> processor_li
         
         cout << endl;
     }
+    cout << "TOTAL CYCLES: " << cycle << endl;
 }

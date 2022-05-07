@@ -1,13 +1,13 @@
 /* Author: Jacob Krawitz (jkrawitz@muhlenberg.edu) 
-   Date: 4/29/22
+   Date: 5/06/22
    Description: Defines function for scenario 3 (I handle allocation).
 
    ** NOTE **
    Outputs are possible to see, but are commented out.
 */
 
+// INCLUDE STATEMENT
 #include "functions.h"
-
 
 // Scenario 3, FF
 void scenario_3_FF(vector<Process> process_queue, vector<Processor> processor_list, vector<Slot> memory)
@@ -336,6 +336,7 @@ void scenario_3_FF(vector<Process> process_queue, vector<Processor> processor_li
         cout << endl;
     }
     cout << "FAILED TO ALLOCATE: " << fails << endl;
+    cout << "TOTAL CYCLES: " << cycle << endl;
 }
 
 // Scenario 3, BF
@@ -635,22 +636,20 @@ void scenario_3_BF(vector<Process> process_queue, vector<Processor> processor_li
                     // Deallocate the memory
                     my_free(memory, processor_list[i].current_process); 
 
-                    cout << "HERE" << endl;
-
+                    // If there are processes waiting due to memory...
                     if(!mem_wait_queue.empty())
                     {
-                        cout << "MEM SIZE: " << mem_wait_queue.size();
-                        Process next_process = mem_wait_queue.front();
+                        Process next_process = mem_wait_queue.front();  // Set the front as next process
 
-                        if(my_alloc_BF(memory, next_process))
+                        if(my_alloc_BF(memory, next_process))   // If we can fit it, assign it to a processor
                         {
                             processor_list[i].current_process = next_process;
                             processor_list[i].has_process = true;
 
-                            mem_wait_queue.erase(mem_wait_queue.begin());
+                            mem_wait_queue.erase(mem_wait_queue.begin());   // Erase from mem_wait_queue
                         }
                     }
-                    else
+                    else    // Otherwise, if the queue is empty, just put a holder process to signal that the processor is done
                     {
                         // Holder process 
                             processor_list[i].current_process = holder_process;
@@ -687,4 +686,5 @@ void scenario_3_BF(vector<Process> process_queue, vector<Processor> processor_li
         cout << endl;
     }
     cout << "FAILED TO ALLOCATE: " << fails << endl;
+    cout << "TOTAL CYCLES: " << cycle << endl;
 }
